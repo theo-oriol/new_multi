@@ -292,8 +292,8 @@ if __name__ == "__main__":
     with open(os.path.join(dir_path, "config.json"), "w") as f:
         json.dump(CONFIG, f, indent=4)
 
-    train_paths, train_labels = import_data("/home/oriol@newcefe.newage.fr/Datasets/csv_split/habitatniveau1/train.csv")
-    valid_paths, valid_labels = import_data("/home/oriol@newcefe.newage.fr/Datasets/csv_split/habitatniveau1/valid.csv")
+    train_paths, train_labels = import_data("csv_split/habitatniveau1/train.csv")
+    valid_paths, valid_labels = import_data("csv_split/habitatniveau1/valid.csv")
 
     model, hist = train_simple(
         train_paths, train_labels,

@@ -29,21 +29,17 @@ def main():
     df = pd.read_csv(csv_path)
     prob_cols  = sorted([c for c in df.columns if c.startswith("prob_")],  key=lambda x: int(x.split("_")[1]))
     label_cols = sorted([c for c in df.columns if c.startswith("label_")], key=lambda x: int(x.split("_")[1]))
-    assert prob_cols and label_cols and len(prob_cols) == len(label_cols), "CSV must have matching prob_* and label_* columns."
 
     probs  = torch.tensor(df[prob_cols].to_numpy(np.float32))  
     labels = torch.tensor(df[label_cols].to_numpy(np.int64))   
     N, C = labels.shape
 
     class_names = json.loads(Path(LABELS_PATH).read_text(encoding="utf-8"))
-    assert isinstance(class_names, list) and len(class_names) == C, "labels file must be JSON array with C names."
 
     pos_counts = labels.sum(dim=0)  
     valid_idx = [i for i in range(C) if pos_counts[i].item() > 0]
 
-    if not valid_idx:
-        print("No classes with positive samples; nothing to plot.")
-        return
+ 
 
     metric = MultilabelPrecisionRecallCurve(num_labels=C)
     metric.update(probs, labels)
@@ -67,15 +63,13 @@ def main():
 
     mAP = float(np.mean(aps))
     plt.xlabel("Recall"); plt.ylabel("Precision")
-    plt.title(f"Precision–Recall (valid classes: {len(valid_idx)}/{C})  mAP={mAP:.3f}")
+    plt.title(f"Precision–Recall  mAP={mAP:.3f}")
     plt.xlim(0, 1); plt.ylim(0, 1.05); plt.grid(alpha=0.3)
     plt.legend(fontsize=8, loc="best")
     plt.tight_layout()
     plt.savefig(out_dir / "PR_all_classes.png", dpi=150)
     plt.close()
 
-    print(f"Saved per-class PR for {len(valid_idx)} classes to: {out_dir}")
-    print(f"Saved global PR overlay with mAP to: {out_dir / 'PR_all_classes.png'}")
 
 if __name__ == "__main__":
     main()

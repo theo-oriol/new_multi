@@ -241,13 +241,13 @@ if __name__ == "__main__":
     with open(os.path.join(dir_path, "config.json"), "w") as f:
         json.dump(CONFIG, f, indent=4)
 
-    list_of_train_image_path,list_of_train_image_labels = import_data("/home/oriol@newcefe.newage.fr/Datasets/csv_split/habitatniveau1/train.csv")
-    list_of_valid_image_path,list_of_valid_image_labels = import_data("/home/oriol@newcefe.newage.fr/Datasets/csv_split/habitatniveau1/valid.csv")
+    list_of_train_image_path,list_of_train_image_labels = import_data("csv_split/habitatniveau1/train.csv")
+    list_of_valid_image_path,list_of_valid_image_labels = import_data("csv_split/habitatniveau1/valid.csv")
 
     model, hist = train_simple(
         list_of_train_image_path, list_of_train_image_labels,
         list_of_valid_image_path, list_of_valid_image_labels,
-        root="/home/oriol@newcefe.newage.fr/Datasets//whole_bird"  
+        root="/home/oriol@newcefe.newage.fr/Datasets/whole_bird"  
     )
 
     torch.save(
