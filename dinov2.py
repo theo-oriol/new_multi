@@ -105,23 +105,8 @@ class DinoV2Classifier(nn.Module):
             nn.Linear(feat_dim, num_classes),
         )
 
-    @torch.no_grad()
-    def _forward_feats(self, x):
-
-        out = self.backbone.forward_features(x)
-        if isinstance(out, dict):
-            for k in ["x_norm_clstoken", "x_cls", "cls_token"]:
-                if k in out:
-                    return out[k]               
-            if "x_norm" in out:
-                return out["x_norm"].mean(dim=1)
-            if "x" in out:
-                return out["x"].mean(dim=1)
-            raise KeyError(f"Unexpected forward_features keys: {list(out.keys())}")
-        return out  
-
     def forward(self, x):
-        feats = self._forward_feats(x)    
+        feats = self.backbone(x)    
         logits = self.head(feats)         
         return logits
 
