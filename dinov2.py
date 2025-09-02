@@ -18,7 +18,7 @@ from torchvision.transforms.functional import pad
 
 
 NAME        = "DINOv2"
-ARCH        = "dinov2_vits14"   # options: dinov2_vits14 / vitb14 / vitl14 / vitg14
+ARCH        = "dinov2_vits14"   # dinov2_vits14 / vitb14 / vitl14 / vitg14
 NUM_CLASSES = 15
 BATCH_SIZE  = 40
 EPOCHS      = 2
@@ -76,7 +76,9 @@ class PathsAndLabels(Dataset):
         img = Image.open(p).convert("RGB")
         if self.transform:
             img = self.transform(img)
+
         label = torch.from_numpy(self.labels[idx])  
+
         return img, label, rel_path
 
 
@@ -248,10 +250,10 @@ def train_simple(
             for imgs, labels, rel_paths in val_loader:
                 imgs = imgs.to(DEVICE, non_blocking=True)
                 logits = model(imgs)
-                probs = logits.sigmoid().cpu().numpy()     # (B, C)
+                probs = logits.sigmoid().cpu().numpy()     
                 all_probs.append(probs)
-                all_labels.append(labels.cpu().numpy())    # (B, C)
-                all_paths.extend(rel_paths)                # list length += B
+                all_labels.append(labels.cpu().numpy())    
+                all_paths.extend(rel_paths)               
 
         all_probs  = np.concatenate(all_probs, axis=0)
         all_labels = np.concatenate(all_labels, axis=0)
@@ -277,8 +279,8 @@ if __name__ == "__main__":
     with open(os.path.join(dir_path, "config.json"), "w") as f:
         json.dump(CONFIG, f, indent=4)
 
-    train_paths, train_labels = import_data("csv_split/habitatniveau1/train.csv")
-    valid_paths, valid_labels = import_data("csv_split/habitatniveau1/valid.csv")
+    train_paths, train_labels = import_data("habitatniveau1/train.csv")
+    valid_paths, valid_labels = import_data("habitatniveau1/valid.csv")
 
     model, hist = train_simple(
         train_paths, train_labels,
