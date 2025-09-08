@@ -8,7 +8,7 @@ import torch
 from torcheval.metrics import MultilabelPrecisionRecallCurve
 from torcheval.metrics.functional.classification.auprc import binary_auprc
 
-CSV_PATH    = "/home/oriol@newcefe.newage.fr/Models/new_multi/runs/runs_dino/DINOv2_multi_3/predictions_val.csv"
+CSV_PATH    = "/home/oriol@newcefe.newage.fr/JeanZay/runs/runs_dino/DINOv2_multi_1/predictions_val.csv"
 LABELS_PATH = "/home/oriol@newcefe.newage.fr/Models/new_multi/labels_habitat1.json"  
 
 def safe_name(s):

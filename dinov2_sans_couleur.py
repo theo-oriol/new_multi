@@ -17,7 +17,7 @@ from torchmetrics.classification import MultilabelF1Score
 from torchvision.transforms.functional import pad
 
 
-NAME        = "DINOv2"
+NAME        = "DINOv2_sans_couleur"
 ARCH        = "dinov2_vits14"   # dinov2_vits14 / vitb14 / vitl14 / vitg14
 NUM_CLASSES = 15
 BATCH_SIZE  = 40

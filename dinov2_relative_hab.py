@@ -18,10 +18,10 @@ from torchvision.transforms.functional import pad
 
 
 NAME        = "DINOv2_relatif"
-ARCH        = "dinov2_vits14"   # dinov2_vits14 / vitb14 / vitl14 / vitg14
+ARCH        = "dinov2_vitl14"   # dinov2_vits14 / vitb14 / vitl14 / vitg14
 NUM_CLASSES = 9
-BATCH_SIZE  = 40
-EPOCHS      = 2
+BATCH_SIZE  = 15
+EPOCHS      = 200
 LR          = 1e-4
 WEIGHT_DECAY= 0.05
 DEVICE      = "cuda" if torch.cuda.is_available() else "cpu"
@@ -49,11 +49,20 @@ def startup_dir(name):
     os.makedirs(destination_dir)
     return destination_dir
 
+
+def _normalize_rows(a: np.ndarray, eps: float = 1e-12) -> np.ndarray:
+    # assumes a >= 0 already
+    row_sums = a.sum(axis=1, keepdims=True)
+    row_sums = np.where(row_sums < eps, 1.0, row_sums)  # avoid /0
+    a = a / row_sums
+    return a.astype(np.float32)
+
 def import_data(path):
     df = pd.read_csv(path)
     df["labels"] = df["labels"].apply(json.loads)
     X = df["name_of_img"].values
-    y = np.array(df["labels"].tolist(), dtype=np.float32)  
+    y = np.array(df["labels"].tolist(), dtype=np.float32)/100.0  
+    y = _normalize_rows(y)
     return X, y
 
 
@@ -227,9 +236,9 @@ def train_simple(
         for imgs, labels, _ in train_loader:
             imgs = imgs.to(DEVICE)
             labels = labels.to(DEVICE)  
-
             logits = model(imgs)
-            loss = criterion(logits.sigmoid(), labels)
+            log_probs = F.log_softmax(logits, dim=-1)
+            loss = criterion(log_probs, labels)
 
             optimizer.zero_grad()
             loss.backward()
@@ -251,7 +260,8 @@ def train_simple(
                 imgs = imgs.to(DEVICE, non_blocking=True)
                 labels = labels.to(DEVICE, non_blocking=True)
                 logits = model(imgs)
-                loss = criterion(logits.sigmoid(), labels)
+                log_probs = F.log_softmax(logits, dim=-1)
+                loss = criterion(log_probs, labels)
                 val_metric.update(logits.sigmoid(), labels)
                 va_loss_accum += loss.item()
 
@@ -312,8 +322,42 @@ if __name__ == "__main__":
     with open(os.path.join(dir_path, "config.json"), "w") as f:
         json.dump(CONFIG, f, indent=4)
 
+    with open("labels_habitat1_relatif.json", "r") as f:
+        class_names = json.load(f)
+
     train_paths, train_labels = import_data("habitatniveau1_relatif/train.csv")
     valid_paths, valid_labels = import_data("habitatniveau1_relatif/valid.csv")
+
+    
+
+    fig, axs = plt.subplots(3, 3, figsize=(10, 10))
+    for i in range(NUM_CLASSES):
+        ax = axs[i // 3, i % 3]
+        ax.hist(train_labels[:, i], bins=20, alpha=0.5, label="train")
+        ax.hist(valid_labels[:, i], bins=20, alpha=0.5, label="valid")
+        ax.set_title(f"Class Distri {class_names[i]}")
+        ax.legend()
+    plt.savefig(os.path.join(dir_path, "Data Distri.png"), dpi=150)
+    plt.close()
+
+    C = valid_labels.shape[1]
+    data_valid = [valid_labels[:, c] for c in range(C)]
+    train_valid = [train_labels[:, c] for c in range(C)]
+
+    fig, axs = plt.subplots(2, figsize=(10, 10))
+
+    parts = axs[0].violinplot(data_valid, showmeans=False, showmedians=True, showextrema=True)
+    axs[0].set_xticks(ticks=np.arange(1, C + 1), labels=class_names, rotation=60, ha="right")
+    axs[0].set_ylabel("Class probability")
+    axs[0].set_title("Train: Probability Distribution per Class (Violin)")
+    
+    parts = axs[1].violinplot(train_valid, showmeans=False, showmedians=True, showextrema=True)
+    axs[1].set_xticks(ticks=np.arange(1, C + 1), labels=class_names, rotation=60, ha="right")
+    axs[1].set_ylabel("Class probability")
+    axs[1].set_title("Train: Probability Distribution per Class (Violin)")
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(dir_path, "Data Distri violin.png"), dpi=150)
 
     model, hist, test_brier = train_simple(
         train_paths, train_labels,
@@ -347,8 +391,7 @@ if __name__ == "__main__":
     values = test_brier.detach().cpu().numpy()
 
 
-    with open("labels_habitat1_relatif.json", "r") as f:
-        class_names = json.load(f)
+    
 
     plt.figure(figsize=(10, 5))
     plt.bar(range(num_classes), values, tick_label=class_names)
