@@ -18,14 +18,14 @@ from torchvision.transforms.functional import pad
 
 
 NAME        = "DINOv2_sans_couleur"
-ARCH        = "dinov2_vits14"   # dinov2_vits14 / vitb14 / vitl14 / vitg14
+ARCH        = "dinov2_vitl14"   # dinov2_vits14 / vitb14 / vitl14 / vitg14
 NUM_CLASSES = 15
-BATCH_SIZE  = 40
-EPOCHS      = 2
+BATCH_SIZE  = 15
+EPOCHS      = 80
 LR          = 1e-4
 WEIGHT_DECAY= 0.05
 DEVICE      = "cuda" if torch.cuda.is_available() else "cpu"
-SAVE_DIR    = "runs/runs_dino"  
+SAVE_DIR    = "runs/runs_dino_sans_couleur"  
 
 CONFIG = {
     "name": NAME,
@@ -141,7 +141,6 @@ def make_transforms(is_train: bool):
             NewPad(),
             T.Resize(224, interpolation=T.InterpolationMode.BICUBIC),
             T.Grayscale(num_output_channels=3),
-            T.RandomHorizontalFlip(p=0.5),
             T.ToTensor(),
             T.Normalize(mean, std),
         ])

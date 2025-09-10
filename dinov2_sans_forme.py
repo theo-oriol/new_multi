@@ -18,10 +18,10 @@ from torchvision.transforms.functional import pad
 
 
 NAME        = "DINOv2_sans_forme"
-ARCH        = "dinov2_vits14"   # dinov2_vits14 / vitb14 / vitl14 / vitg14
+ARCH        = "dinov2_vitl14"   # dinov2_vits14 / vitb14 / vitl14 / vitg14
 NUM_CLASSES = 15
-BATCH_SIZE  = 40
-EPOCHS      = 2
+BATCH_SIZE  = 15
+EPOCHS      = 80
 LR          = 1e-4
 WEIGHT_DECAY= 0.05
 DEVICE      = "cuda" if torch.cuda.is_available() else "cpu"
@@ -135,9 +135,8 @@ class NewPad(object):
 
 class PixelShuffleAug(torch.nn.Module):
     def forward(self, x):
-        # x: [C, H, W]
         C, H, W = x.shape
-        flat = x.view(C, -1)  # [C, H*W]
+        flat = x.view(C, -1)  
         idx = torch.randperm(H*W)
         return flat[:, idx].view(C, H, W)
     

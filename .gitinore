@@ -6,6 +6,8 @@ __pycache__/
 runs/
 runs_dino/
 runs_dino_relatif/
+runs_dino_sans_couleur/
+runs_dino_sans_forme/
 
 # notebooks
 *.ipynb
